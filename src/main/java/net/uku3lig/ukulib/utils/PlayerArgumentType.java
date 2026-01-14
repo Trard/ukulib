@@ -8,6 +8,7 @@ import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
+
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.network.PlayerListEntry;
@@ -60,7 +61,7 @@ public class PlayerArgumentType implements ArgumentType<PlayerArgumentType.Playe
 
     @Override
     public <S> CompletableFuture<Suggestions> listSuggestions(CommandContext<S> context, SuggestionsBuilder builder) {
-        if (!(context.getSource() instanceof FabricClientCommandSource source)) {
+        if (!(context.getSource() instanceof FabricClientCommandSource)) {
             return CommandSource.suggestMatching(Collections.emptyList(), builder);
         }
 
