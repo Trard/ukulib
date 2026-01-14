@@ -8,6 +8,9 @@ import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.network.ClientPlayNetworkHandler;
+import net.minecraft.client.network.PlayerListEntry;
 import net.minecraft.command.CommandSource;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.text.Text;
@@ -15,6 +18,7 @@ import net.minecraft.text.Text;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Stream;
 
 /**
  * An argument type which represents players. Can only be used in client commands.
@@ -56,11 +60,21 @@ public class PlayerArgumentType implements ArgumentType<PlayerArgumentType.Playe
 
     @Override
     public <S> CompletableFuture<Suggestions> listSuggestions(CommandContext<S> context, SuggestionsBuilder builder) {
-        if (context.getSource() instanceof FabricClientCommandSource source) {
-            return CommandSource.suggestMatching(source.getWorld().getPlayers().stream().map(PlayerEntity::getNameForScoreboard), builder);
-        } else {
+        if (!(context.getSource() instanceof FabricClientCommandSource source)) {
             return CommandSource.suggestMatching(Collections.emptyList(), builder);
         }
+
+        MinecraftClient mc = MinecraftClient.getInstance();
+        ClientPlayNetworkHandler connection = mc.getNetworkHandler();
+
+        if (connection == null) {
+            return CommandSource.suggestMatching(Collections.emptyList(), builder);
+        }
+
+        Collection<PlayerListEntry> infos = connection.getPlayerList();
+        Stream<String> suggestionList = infos.stream().map(info -> info.getProfile().getName());
+
+        return CommandSource.suggestMatching(suggestionList, builder);
     }
 
     @Override
